@@ -19,7 +19,7 @@ s3_client = boto3.client(
     aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
     region_name=os.getenv('AWS_REGION') )
 
-def generate_presigned_url(bucket_name, s3_key, expiration=3600):
+def generate_presigned_url(bucket_name, s3_key, expiration=os.getenv('S3_URL_EXPIRATION')):
     try:
         response = s3_client.generate_presigned_url('get_object',
                                                     Params={'Bucket': bucket_name, 'Key': s3_key},
@@ -147,5 +147,12 @@ def delete_file(file_hash):
     else:
         return jsonify({"error": "File not found"}), 404
     
+@app.route('/healthcheck', methods=['GET'])
+def healthcheck():
+    return jsonify({
+        "status": "healthy",
+        "message": "The service is up and running"
+    }), 200
+
 if __name__ == '__main__':
     app.run(debug=True)
