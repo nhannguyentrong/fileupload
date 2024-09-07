@@ -41,7 +41,15 @@ def upload_to_s3(file, bucket, s3_key):
         s3_client.upload_fileobj(file, bucket, s3_key)
         return True
     except NoCredentialsError:
+        print("No credentials provided to access S3.")
         return False
+    except ClientError as e:
+        print(f"Client error during S3 upload: {e}")
+        return False
+    except Exception as e:
+        print(f"Unexpected error during S3 upload: {e}")
+        return False
+
 
 def file_exists_in_s3(bucket, prefix):
     try:
@@ -78,10 +86,14 @@ def upload_file():
 
     if file_exists_in_s3(S3_BUCKET, s3_folder):
         existing_files = list_s3_files(S3_BUCKET, s3_folder)
+        file_hash = existing_files.split('/')[0]
+        file_name = existing_files.split('/')[-1]
         presigned_url_existing_files = generate_presigned_url(S3_BUCKET, existing_files)
         return jsonify({
             "message": "File already exists with the same content",
-            "existing_files": presigned_url_existing_files 
+            "presigned_url": presigned_url_existing_files,
+            "file_hash": file_hash,
+            "file_name": file_name,
         }), 200
 
     # Upload file to S3
@@ -90,7 +102,9 @@ def upload_file():
 
         return jsonify({
             "message": "File uploaded successfully",
-            "file_path": presigned_url 
+            "presigned_url": presigned_url,
+            "file_hash": file_hash,
+            "file_name": file.filename
         }), 201
     else:
         return jsonify({"error": "File upload failed"}), 500
@@ -104,7 +118,15 @@ def get_file(filename):
     if 'Contents' in response:
         for file in response['Contents']:
             if filename in file['Key']:
-                matching_files.append(generate_presigned_url(S3_BUCKET, file['Key']))
+                                # Extract file hash (assumed to be the first part of the key)
+                file_key = file['Key']
+                file_hash = file_key.split('/')[0]
+                file_name = file_key.split('/')[-1]
+                matching_files.append({
+                    "file_name": file_name,
+                    "file_hash": file_hash,
+                    "presigned_url": generate_presigned_url(S3_BUCKET, file_key)
+                })
 
     if not matching_files:
         return jsonify({"error": "File not found"}), 404
@@ -112,42 +134,18 @@ def get_file(filename):
     return jsonify({"message": f"We have {len(matching_files)} file(s) found", "matching_files": matching_files}), 200
 
 # Route to delete a file
-@app.route('/files/<filename>', methods=['DELETE'])
-def delete_file(filename):
-    matching_paths = []
-    deleted_files = []
-    deleted_folders = []
+@app.route('/files/<file_hash>', methods=['DELETE'])
+def delete_file(file_hash):
 
-    # List all objects in the S3 bucket
-    response = s3_client.list_objects_v2(Bucket=S3_BUCKET)
+    response = s3_client.list_objects_v2(Bucket=S3_BUCKET, Prefix=file_hash,MaxKeys=1)
     if 'Contents' in response:
-        for obj in response['Contents']:
-            if filename in obj['Key']:
-                matching_paths.append(obj['Key'])
-
-    if not matching_paths:
+        s3_client.delete_object(Bucket=S3_BUCKET, Key=response['Contents'][0]['Key'])
+        return jsonify({"message": "File deleted successfully",
+                        "file_hash":file_hash,
+                        "path":response['Contents'][0]['Key']
+                        }), 200
+    else:
         return jsonify({"error": "File not found"}), 404
-
-    # Delete matching files and their folders
-    for file_path in matching_paths:
-        try:
-            s3_client.delete_object(Bucket=S3_BUCKET, Key=file_path)
-            deleted_files.append(file_path)
-
-            # Extract folder from the file path (hash)
-            folder_path = file_path.rsplit('/', 1)[0]
-            # Check if the folder is empty
-            remaining_files = list_s3_files(S3_BUCKET, folder_path)
-            if len(remaining_files) == 0:
-                deleted_folders.append(folder_path)
-        except ClientError:
-            return jsonify({"error": "Error deleting file"}), 500
-
-    return jsonify({
-        "message": f"{len(deleted_files)} file(s) deleted successfully",
-        "deleted_files": deleted_files,
-        "deleted_folders": deleted_folders
-    }), 200
-
+    
 if __name__ == '__main__':
     app.run(debug=True)
