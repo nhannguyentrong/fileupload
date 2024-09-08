@@ -45,6 +45,11 @@ resource "aws_iam_role_policy" "github_actions_policy" {
     Version = "2012-10-17",
     Statement = [
       {
+        "Effect": "Allow",
+        "Action": "ecs:DescribeTaskDefinition",
+        "Resource": "*"
+      },      
+      {
           "Effect": "Allow",
           "Action": [
               "ecr:GetDownloadUrlForLayer",
@@ -53,27 +58,23 @@ resource "aws_iam_role_policy" "github_actions_policy" {
               "ecr:GetAuthorizationToken"
           ],
           "Resource": "*"
+      },
+      {
+        "Effect": "Allow",
+        "Action": "ecs:RegisterTaskDefinition",
+        "Resource": "${aws_ecs_task_definition.app_task.arn_without_revision}/*"
       },      
+		{
+			"Effect": "Allow",
+			"Action": "iam:PassRole",
+			"Resource": aws_iam_role.ecs_task_execution_role.arn
+		},
       {
         Effect = "Allow",
         Action = [
           "ecr:*"
         ],
         Resource = aws_ecr_repository.app_ecr.arn
-      },
-      {
-        Effect = "Allow",
-        Action = [
-          "ecs:*"
-        ],
-        Resource = [
-            "${aws_ecs_cluster.app_cluster.id}",
-             "${aws_ecs_cluster.app_cluster.id}/*",
-            "${aws_ecs_service.app_service.id}",
-             "${aws_ecs_service.app_service.id}/*",
-            "${aws_ecs_task_definition.app_task.arn_without_revision}",
-            "${aws_ecs_task_definition.app_task.arn_without_revision}/*"
-        ]      
       }
     ]
   })
