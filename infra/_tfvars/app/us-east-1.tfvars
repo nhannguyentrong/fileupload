@@ -90,16 +90,16 @@ security_groups = {
 
 #ECR
 repositories = {
-    name                 = "upload-file-api-repo"
-    image_tag_mutability = "MUTABLE"
+  name                 = "upload-file-api-repo"
+  image_tag_mutability = "MUTABLE"
 
-    image_scanning_configurations = [{
-      scan_on_push = true
-    }]
+  image_scanning_configurations = [{
+    scan_on_push = true
+  }]
 }
 #ECS
 app_cluster = "app_cluster"
 app_service = "app_service"
 
 #OIDC
-github_profile_url="nhannguyentrong/fileupload:*"
+github_profile_url = "nhannguyentrong/fileupload:*"

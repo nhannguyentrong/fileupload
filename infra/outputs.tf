@@ -1,10 +1,10 @@
 output "github_assume_role" {
   value = aws_iam_role.github_actions_role.arn
-  
+
 }
 output "aws_lb_app_lb" {
   value = aws_lb.app_lb.dns_name
-  
+
 }
 output "task_name" {
   value = "app-task"
@@ -20,5 +20,5 @@ output "ecs_cluster" {
 
 output "ecs_service" {
   value = aws_ecs_service.app_service.name
-  
+
 }

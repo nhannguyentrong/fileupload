@@ -44,9 +44,9 @@ variable "security_groups" {
 variable "repositories" {}
 
 variable "app_cluster" {
-  
+
 }
-variable "app_service"{}
+variable "app_service" {}
 variable "github_profile_url" {
-  
+
 }

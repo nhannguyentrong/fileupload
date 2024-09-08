@@ -15,7 +15,7 @@ resource "aws_ecs_task_definition" "app_task" {
   cpu                      = "256"
   memory                   = "512"
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
-  task_role_arn = aws_iam_role.ecs_task_execution_role.arn
+  task_role_arn            = aws_iam_role.ecs_task_execution_role.arn
 
   container_definitions = jsonencode([
     {
@@ -28,24 +28,24 @@ resource "aws_ecs_task_definition" "app_task" {
           hostPort      = 5000
         }
       ],
-        "environment": [
-            {
-                "name": "S3_BUCKET_NAME",
-                "value": aws_s3_bucket.app_s3.bucket
-            },
-            {
-                "name": "S3_URL_EXPIRATION",
-                "value": "3600"
-            }            
-        ],
-        "logConfiguration" : {
-            logDriver = "awslogs"
-            options = {
-            "awslogs-group"         = aws_cloudwatch_log_group.ecs_log_group.name
-            "awslogs-region"        = "us-east-1"
-            "awslogs-stream-prefix" = "ecs"
-            }
-        }        
+      "environment" : [
+        {
+          "name" : "S3_BUCKET_NAME",
+          "value" : aws_s3_bucket.app_s3.bucket
+        },
+        {
+          "name" : "S3_URL_EXPIRATION",
+          "value" : "3600"
+        }
+      ],
+      "logConfiguration" : {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = aws_cloudwatch_log_group.ecs_log_group.name
+          "awslogs-region"        = "us-east-1"
+          "awslogs-stream-prefix" = "ecs"
+        }
+      }
     }
   ])
 }
@@ -62,7 +62,7 @@ resource "aws_ecs_service" "app_service" {
     subnets         = tolist(module.vpc.private_subnets)
     security_groups = [module.security_group.security_groups["api"]]
   }
-    load_balancer {
+  load_balancer {
     target_group_arn = aws_lb_target_group.app_tg.arn
     container_name   = "app-api"
     container_port   = 5000
