@@ -70,11 +70,21 @@ resource "aws_iam_role_policy" "github_actions_policy" {
 			"Resource": aws_iam_role.ecs_task_execution_role.arn
 		},
       {
-        Effect = "Allow",
-        Action = [
-          "ecr:*"
-        ],
-        Resource = aws_ecr_repository.app_ecr.arn
+        "Effect": "Allow",
+        "Action": "ecr:*",
+        "Resource": "${aws_ecr_repository.app_ecr.arn}"
+      },
+      {
+        "Effect":"Allow",
+        "Action": "ecs:*",
+        "Resource" : [
+            "${aws_ecs_cluster.app_cluster.id}",
+             "${aws_ecs_cluster.app_cluster.id}/*",
+            "${aws_ecs_service.app_service.id}",
+             "${aws_ecs_service.app_service.id}/*",
+            "${aws_ecs_task_definition.app_task.arn_without_revision}",
+            "${aws_ecs_task_definition.app_task.arn_without_revision}/*"
+        ]      
       }
     ]
   })
