@@ -22,3 +22,7 @@ output "ecs_service" {
   value = aws_ecs_service.app_service.name
 
 }
+output "container_name" {
+  value = "app-api"
+  
+}
