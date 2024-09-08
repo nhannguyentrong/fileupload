@@ -25,7 +25,10 @@ resource "aws_iam_role" "github_actions_role" {
         Action = "sts:AssumeRoleWithWebIdentity",
         Condition = {
           StringEquals = {
-            "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com",
+            "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
+            
+          },
+          StringLike ={
             "token.actions.githubusercontent.com:sub" = "repo:${var.github_profile_url}"
           }
         }
@@ -41,6 +44,16 @@ resource "aws_iam_role_policy" "github_actions_policy" {
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
+      {
+          "Effect": "Allow",
+          "Action": [
+              "ecr:GetDownloadUrlForLayer",
+              "ecr:BatchGetImage",
+              "ecr:BatchCheckLayerAvailability",
+              "ecr:GetAuthorizationToken"
+          ],
+          "Resource": "*"
+      },      
       {
         Effect = "Allow",
         Action = [
