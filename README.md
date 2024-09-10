@@ -6,10 +6,72 @@
 - **Infrastructure Code:** Located in the `infra` folder, this includes all Terraform files needed for setting up the entire infrastructure on AWS.
 
 ## Introduction
-- **Overview:** This document outlines the steps to set up an application using Terraform and GitHub Actions, detailing each phase from the initial code fork to the final deployment checks.
+- **Overview:** This document outlines the steps to set up an application using Terraform and GitHub Actions, detailing each phase from initial code fork to final deployment checks.
 - **Tools Explained:** Terraform is used for creating and managing infrastructure as code. GitHub Actions serves as the platform for continuous integration and deployment.
 
 ## Infrastructure Overview
+- **Application Framework:** Flask
+- **Deployment and Hosting:** AWS ECS
+- **Traffic Management:** Application Load Balancer
+- **Data Storage:** Amazon S3
+- **Security and Compliance:** AWS security groups and IAM roles
+- **Monitoring and Maintenance:** AWS CloudWatch
+
+## File Management Application Requirements and Solutions
+
+### Requirements Summary
+
+#### Key Functionalities:
+1. **Upload a New File**
+   - Users should have the ability to upload files to the system.
+   
+2. **Retrieve an Uploaded File by Name**
+   - Users should be able to retrieve files using their names.
+   
+3. **Delete an Uploaded File by Name**
+   - Users should have the capability to delete files based on their names.
+
+
+### Proposed Solutions
+
+#### Solution 1: Database-backed Storage with S3 and Deduplication
+
+##### Overview:
+Utilizes Amazon S3 for file storage with a relational database managing metadata, including file names and hashes, to avoid storing duplicate files.
+
+##### Detailed Steps:
+1. **File Upload**
+   - Calculate file hash, check database, skip or upload to S3, and update database.
+2. **File Retrieval**
+   - Query database using LIKE '%filename%' to find and return file paths.
+3. **File Deletion**
+   - Delete database entry and optionally remove file from S3 if not referenced elsewhere.
+
+##### Pros and Cons:
+- **Pros:** Efficient storage management, fast lookup.
+- **Cons:** Requires database setup and management
+#### Solution 2: Hash-based Folder Structure in Storage
+
+##### Overview:
+Stores each file in a folder named after the hash of its contents, inherently avoiding duplicates.
+
+##### Detailed Steps:
+1. **File Upload**
+   - Check if folder with file's hash exists, create new if not, and store file.
+2. **File Retrieval**
+   - Access folder by hash to retrieve file.
+3. **File Deletion**
+   - Remove file from its hash-named folder, delete folder if empty.
+
+##### Pros and Cons:
+- **Pros:** Simple setup, effective deduplication.
+- **Cons:** Less flexibility in file searching, managing empty directories can be cumbersome.
+
+##### Conclusion:
+- I will go with solution 2 for simple setup and effective deduplication. 
+
+
+## Infrastructure Detail
 
 ### Application Framework
 
